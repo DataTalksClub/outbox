@@ -112,3 +112,8 @@ def test_document_includes_gmail_defaults_and_dark_mode():
     assert "font-family:Arial,Helvetica,sans-serif;font-size:small" in page
     assert "#1155cc" in page
     assert "invert(1)" in gmail.document(result, mode="dark")
+
+
+def test_head_only_elements_are_not_reported():
+    result = clean("<html><head><title>T</title><meta charset='utf-8'></head><body><p>x</p></body></html>")
+    assert result.notes == []

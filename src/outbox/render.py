@@ -192,15 +192,15 @@ def render_fallback(template_key: str, context: dict, reason: str) -> dict:
             escaped,
         )
         rows_html.append(
-            f'<tr><th style="text-align:left;padding:4px 12px 4px 0;vertical-align:top;">'
-            f"{html.escape(name)}</th><td style=\"padding:4px 0;\">{linked}</td></tr>"
+            f'<tr><th style="text-align:left;padding:4px 12px 4px 0;vertical-align:top;width:30%;">'
+            f"{html.escape(name)}</th><td style=\"padding:4px 0;word-break:break-all;\">{linked}</td></tr>"
         )
         rows_text.append(f"{name}: {text}")
     body = (
         f"<p><strong>Template <code>{html.escape(template_key)}</code></strong> "
         f"is not in the outbox catalog ({html.escape(reason)}). "
         "This is the context the sender passed:</p>"
-        f'<table style="border-collapse:collapse;">{"".join(rows_html)}</table>'
+        f'<table style="border-collapse:collapse;width:100%;table-layout:fixed;">{"".join(rows_html)}</table>'
     )
     html_body = render_string(
         NEUTRAL_SHELL,

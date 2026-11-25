@@ -348,7 +348,8 @@ class _Sanitizer(HTMLParser):
             self.style_text = []
             return
         if tag in DROP_WITH_CONTENT:
-            _note(self.notes, f"<{tag}> removed")
+            if not self.in_head and tag != "title":
+                _note(self.notes, f"<{tag}> removed")
             if not self_closing and tag not in VOID_ELEMENTS:
                 self.skip_depth, self.skip_tag = 1, tag
             return
