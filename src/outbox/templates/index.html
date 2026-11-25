@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block actions %}
+<form class="search" method="get" action="/">
+  <input type="search" name="to" value="{{ to }}" placeholder="Filter by recipient" aria-label="Filter by recipient">
+</form>
+<form method="post" action="/clear" onsubmit="return confirm('Delete every message?')">
+  <button type="submit" class="danger">Clear all</button>
+</form>
+{% endblock %}
+{% block content %}
+{% if messages %}
+<table class="inbox" data-count="{{ messages|length }}" data-newest="{{ messages[0].id }}">
+  <thead><tr><th>Time</th><th>To</th><th>Subject</th><th>Template</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for m in messages %}
+  <tr>
+    <td class="time"><a href="/messages/{{ m.id }}">{{ m.created_at|when }}</a></td>
+    <td><a href="/messages/{{ m.id }}">{{ m.email }}</a></td>
+    <td class="subject"><a href="/messages/{{ m.id }}">{{ m.subject or "(no subject)" }}</a>
+      {% if m.warnings %}<span class="chip warn">{{ m.warnings|join(", ") }}</span>{% endif %}</td>
+    <td><code>{{ m.template_key }}</code> v{{ m.template_version }}</td>
+    <td><span class="chip">{{ m.status }}</span></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty" data-count="0" data-newest="0">No messages{% if to %} for {{ to }}{% endif %}. Point a Relay client at this server and send one.</p>
+{% endif %}
+<script>
+// Reload when a new message arrives.
+(function () {
+  var el = document.querySelector("[data-newest]");
+  var newest = el ? el.getAttribute("data-newest") : "0";
+  setInterval(function () {
+    fetch("/api/messages?limit=1").then(function (r) { return r.json(); }).then(function (d) {
+      var latest = d.messages.length ? String(d.messages[0].id) : "0";
+      if (latest !== newest) { location.reload(); }
+    }).catch(function () {});
+  }, 3000);
+})();
+</script>
+{% endblock %}

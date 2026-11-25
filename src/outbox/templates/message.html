@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ message.subject }} - Outbox{% endblock %}
+{% block actions %}
+<a class="button" href="/">Back to inbox</a>
+<form method="post" action="/messages/{{ message.id }}/delete">
+  <button type="submit" class="danger">Delete</button>
+</form>
+{% endblock %}
+{% block content %}
+<nav class="modes" aria-label="Rendering">
+  {% set labels = {"desktop": "Gmail web", "mobile": "Gmail mobile", "dark": "Gmail app dark (approx.)", "raw": "Raw HTML"} %}
+  {% for m in modes %}
+  <a href="?view={{ m }}" class="{{ 'active' if m == mode else '' }}">{{ labels[m] }}</a>
+  {% endfor %}
+</nav>
+
+<article class="mail mail-{{ mode }}">
+  <h1 class="mail-subject">{{ message.subject or "(no subject)" }}
+    <span class="label">{{ message.template_key }}</span></h1>
+  <div class="mail-sender">
+    <div class="avatar" aria-hidden="true">{{ (sender_name or "?")[0]|upper }}</div>
+    <div class="who">
+      <div class="from-line">
+        <strong class="sender-name">{{ sender_name }}</strong>
+        <span class="sender-address">&lt;{{ sender_address }}&gt;</span>
+        {% if via %}<span class="via">via {{ via }}</span>{% endif %}
+      </div>
+      <details class="to-line">
+        <summary>to {{ message.email }}{% if message.cc %}, cc {{ message.cc|join(", ") }}{% endif %}</summary>
+        <table class="details">
+          <tr><th>from:</th><td><strong>{{ sender_name }}</strong> &lt;{{ sender_address }}&gt;</td></tr>
+          {% if message.reply_to %}<tr><th>reply-to:</th><td>{{ message.reply_to }}</td></tr>{% endif %}
+          <tr><th>to:</th><td>{{ message.email }}</td></tr>
+          {% if message.cc %}<tr><th>cc:</th><td>{{ message.cc|join(", ") }}</td></tr>{% endif %}
+          {% if message.bcc %}<tr><th>bcc:</th><td>{{ message.bcc|join(", ") }}</td></tr>{% endif %}
+          <tr><th>date:</th><td>{{ message.created_at|when }}</td></tr>
+          <tr><th>subject:</th><td>{{ message.subject }}</td></tr>
+          <tr><th>mailed-by:</th><td>{{ mailed_by }}</td></tr>
+        </table>
+      </details>
+    </div>
+    <div class="date">{{ message.created_at|when }}</div>
+  </div>
+
+  {% if message.warnings %}
+  <p class="notice warn">Outbox warning: {{ message.warnings|join(", ") }}. The real Relay would have answered 404 for this send.</p>
+  {% endif %}
+
+  <div class="frame-wrap">
+    <iframe id="body" title="Message body"
+      src="/messages/{{ message.id }}/body?view={{ mode }}"
+      sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      referrerpolicy="no-referrer"></iframe>
+  </div>
+</article>
+
+{% if notes %}
+<section class="panel">
+  <h2>What Gmail would change</h2>
+  <ul class="notes">{% for note in notes %}<li>{{ note }}</li>{% endfor %}</ul>
+  <p class="hint">HTML size {{ "%.1f"|format(html_size / 1024) }} KB (Gmail clips above 102 KB).</p>
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>Plain text</h2>
+  <pre class="text-body">{{ message.text_body|linkify }}</pre>
+</section>
+
+<section class="panel">
+  <h2>Headers</h2>
+  <table class="headers">
+    {% for name, value in headers %}<tr><th>{{ name }}</th><td>{{ value }}</td></tr>{% endfor %}
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Template context</h2>
+  <table class="headers">
+    {% for name, value in message.context|dictsort %}<tr><th>{{ name }}</th><td>{{ value|string|linkify }}</td></tr>{% endfor %}
+  </table>
+</section>
+
+<script>
+// The iframe runs no scripts (sandbox without allow-scripts); size it from here.
+(function () {
+  var frame = document.getElementById("body");
+  function fit() {
+    try {
+      var doc = frame.contentDocument;
+      if (doc && doc.documentElement) {
+        frame.style.height = Math.max(120, doc.documentElement.scrollHeight) + "px";
+      }
+    } catch (e) {}
+  }
+  frame.addEventListener("load", function () { fit(); setTimeout(fit, 300); });
+})();
+</script>
+{% endblock %}
