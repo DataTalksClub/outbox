@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Outbox{% endblock %}</title>
+<script>
+// Apply the saved theme before first paint (no flash).
+try { var t = localStorage.getItem("outbox-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+</script>
 <link rel="stylesheet" href="/static/outbox.css">
 </head>
 <body>
@@ -11,7 +15,39 @@
   <a class="brand" href="/">Outbox</a>
   <span class="tagline">Relay-compatible test inbox</span>
   {% block actions %}{% endblock %}
+  <div class="theme-toggle" role="group" aria-label="Theme">
+    <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+    <button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
+    <button type="button" data-theme-choice="system" aria-pressed="true">System</button>
+  </div>
 </header>
 <main>{% block content %}{% endblock %}</main>
+<script>
+(function () {
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll("[data-theme-choice]");
+  function current() {
+    var t = root.getAttribute("data-theme");
+    return t === "light" || t === "dark" ? t : "system";
+  }
+  function mark() {
+    var c = current();
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", String(buttons[i].getAttribute("data-theme-choice") === c));
+    }
+  }
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener("click", function () {
+      var c = this.getAttribute("data-theme-choice");
+      if (c === "system") { root.removeAttribute("data-theme"); } else { root.setAttribute("data-theme", c); }
+      try {
+        if (c === "system") { localStorage.removeItem("outbox-theme"); } else { localStorage.setItem("outbox-theme", c); }
+      } catch (e) {}
+      mark();
+    });
+  }
+  mark();
+})();
+</script>
 </body>
 </html>

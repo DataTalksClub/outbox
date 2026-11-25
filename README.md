@@ -138,6 +138,14 @@ configured inside Relay. The outbox always uses the neutral shell.
 The body is rendered in an `<iframe>` sandboxed without scripts, served with a
 `default-src 'none'` Content Security Policy. Links open in a new tab.
 
+### Dark mode
+
+The outbox chrome (header, tabs, cards, panels) follows the OS colour scheme.
+The Light / Dark / System buttons in the header override it; the choice is kept
+in `localStorage` and set as `data-theme` on `<html>`. Only the chrome changes:
+the message body keeps its own rendering (light in Gmail web/mobile, the
+approximated inversion in Gmail app dark).
+
 ### Gmail rendering emulation
 
 The reading view has four modes: **Gmail web**, **Gmail mobile**, **Gmail
